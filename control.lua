@@ -48,6 +48,13 @@ function format_time(time)
   )
 end
 
+-- Convert IRL ticks to local nauvis time
+function nauvis_local_time(total_ticks):
+  local nauvis_day_ticks = 25000
+  local nauvis_day_factor = 1
+  return math.floor(total_ticks / nauvis_day_ticks / nauvis_day_factor)
+end
+
 function move_entities(name_list, move_x, move_y, search_area)
   local logo_entities = game.surfaces['nauvis'].find_entities_filtered({area = search_area, name = name_list})
   for _, e in pairs(logo_entities) do
