@@ -1,44 +1,51 @@
-function time_format(time_int)
-  local hours_int = math.floor(time_int/60/60/60)
-  local remaining_ticks_minutes = time_int - hours_int*60*60*60
-  local minutes_int = math.floor(remaining_ticks_minutes/60/60)
-  local remaining_ticks_seconds = remaining_ticks_minutes - minutes_int*60*60
-  local seconds_int = math.floor(remaining_ticks_seconds/60)
-  local remaining_ticks = remaining_ticks_seconds - seconds_int*60
-  local ticks_int = math.floor(remaining_ticks)
+--[[Convert ticks to human-readable object
 
-  local hours_str = 'x'
-  if hours_int < 10 then
-    hours_str = '00' .. tostring(hours_int)
-  elseif hours_int < 100 then
-    hours_str = '0' .. tostring(hours_int)
-  else
-    hours_str = tostring(hours_int)
-  end   
+In the output table plural give unit since start without removing next units
+(i.e more minutes=120 -> minute=0)
 
-  local minutes_str = 'x'
-  if minutes_int < 10 then
-    minutes_str = '0' .. tostring(minutes_int)
-  else
-    minutes_str = tostring(minutes_int)
-  end   
+Arguments:
+total_ticks (int) -- the number of ticks (IRL or local)
 
-  local seconds_str = 'x'
-  if seconds_int < 10 then
-    seconds_str = '0' .. tostring(seconds_int)
-  else
-    seconds_str = tostring(seconds_int)
-  end
+Returns:
+table -- a time table describing the time in the world
+]]--
+function ticks_to_time(total_ticks)
+  local seconds = math.floor(total_ticks/60)
+  local minutes = math.floor(total_ticks/60/60)
+  local hours = math.floor(total_ticks/60/60/60)
+  local days = 1 + math.floor(total_ticks/60/60/60/24)
+  return {
+    ticks=total_ticks,
+    tick=total_ticks % 60,
+    seconds=seconds,
+    second=seconds % 60,
+    seconds=seconds,
+    minutes=minutes,
+    minute=minutes % 60,
+    hours=hours,
+    hour=hours % 24,
+    days=days
+  }
+end
 
-  local ticks_str = 'x'
-  if ticks_int < 10 then
-    ticks_str = '0' .. tostring(ticks_int)
-  else
-    ticks_str = tostring(ticks_int)
-  end
-    
-  local time_string = hours_str .. 'h_' .. minutes_str .. 'm_' .. seconds_str .. 's_' .. ticks_str ..'t'
-  return time_string
+--[[Format a human readable dict to a string
+
+Arguments:
+time (table) -- a table given from `ticks_to_time`
+
+Returns:
+string -- a string representation of time
+]]--
+function format_time(time)
+  local time_format = '%03dT%02d:%02d:%02d.%02d'
+  return string.format(
+    time_format,
+    time['day'],
+    time['hour'],
+    time['minute'],
+    time['second'],
+    time['tick']
+  )
 end
 
 function move_entities(name_list, move_x, move_y, search_area)
@@ -69,7 +76,9 @@ function timelapse_screenshot(tick)
   local arg_resolution = {16*resolution_multiplier*tile_px*chunk_tiles, 9*resolution_multiplier*tile_px*chunk_tiles}
 
   local timelapse_subfolder = 'test/'
-  local arg_path = 'built-in-timelapse/' .. timelapse_subfolder .. arg_filename_base .. '_' .. time_format(tick) .. '.png'
+
+  local time = ticks_to_time(tick)
+  local arg_path = 'built-in-timelapse/' .. timelapse_subfolder .. arg_filename_base .. '_' .. format_time(time) .. '.png'
   game.take_screenshot{path = arg_path, position = arg_position, resolution = arg_resolution, zoom = arg_zoom, render_tiles = true};
 end
 
